@@ -79,6 +79,8 @@ For a device called `AT-02 5F3E` (the last four digits of its address):
 | `sensor.at_02_5f3e_alarm_interval` | min | how often an alarm repeats, as set on the thermometer |
 | `binary_sensor.at_02_5f3e_connection` | | on while Home Assistant holds the Bluetooth link |
 
+<img src="https://raw.githubusercontent.com/phoinixgrr/thermogatz_ha/main/images/diagnostics.png" alt="Diagnostic entities" width="420">
+
 Temperatures are always Celsius. Home Assistant converts them to your unit system. If the thermometer is set to
 Fahrenheit, the integration switches it back to Celsius when it connects.
 
