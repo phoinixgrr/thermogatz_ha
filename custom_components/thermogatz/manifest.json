@@ -1,0 +1,23 @@
+{
+  "domain": "thermogatz",
+  "name": "Thermogatz BBQ Thermometer",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "local_name": "AT-02"
+    }
+  ],
+  "codeowners": [
+    "@phoinixgrr"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/phoinixgrr/thermogatz_ha",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/phoinixgrr/thermogatz_ha/issues",
+  "requirements": [],
+  "version": "0.0.1"
+}

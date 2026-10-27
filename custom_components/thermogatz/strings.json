@@ -1,0 +1,25 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Choose a thermometer to set up.",
+        "data": { "address": "Device" }
+      },
+      "bluetooth_confirm": {
+        "description": "Set up {name}? Home Assistant will keep a Bluetooth connection open to it, so the phone app cannot connect at the same time."
+      }
+    },
+    "abort": {
+      "no_devices_found": "No Thermogatz AT-02 found nearby. Close the phone app and make sure the thermometer is on.",
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration is already in progress"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "probe": { "name": "Probe {number}" },
+      "ambient": { "name": "Ambient" }
+    }
+  }
+}
