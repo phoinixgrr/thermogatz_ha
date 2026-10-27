@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,7 +26,12 @@ async def async_setup_entry(
     device = entry.runtime_data
     async_add_entities(
         [ProbeSensor(device, i) for i in range(PROBE_COUNT)]
-        + [AmbientSensor(device), BatterySensor(device)]
+        + [
+            AmbientSensor(device),
+            BatterySensor(device),
+            FirmwareSensor(device),
+            AlarmIntervalSensor(device),
+        ]
     )
 
 
@@ -123,3 +128,47 @@ class BatterySensor(ThermogatzEntity):
     def available(self) -> bool:
         """Available while connected and the status reply has arrived."""
         return self._device.connected and self._device.battery is not None
+
+
+class FirmwareSensor(ThermogatzEntity):
+    """Firmware version reported by the thermometer."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "firmware"
+
+    def __init__(self, device: ThermogatzDevice) -> None:
+        super().__init__(device)
+        self._attr_unique_id = f"{device.address}_firmware"
+
+    @property
+    def native_value(self) -> str | None:
+        """Firmware version, kept after the link drops because it does not change."""
+        return self._device.firmware
+
+    @property
+    def available(self) -> bool:
+        """Available once the thermometer has reported it."""
+        return self._device.firmware is not None
+
+
+class AlarmIntervalSensor(ThermogatzEntity):
+    """How often the thermometer repeats an alarm, as set on the device."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "alarm_interval"
+
+    def __init__(self, device: ThermogatzDevice) -> None:
+        super().__init__(device)
+        self._attr_unique_id = f"{device.address}_alarm_interval"
+
+    @property
+    def native_value(self) -> int | None:
+        """Alarm repeat interval in minutes."""
+        return self._device.alarm_interval
+
+    @property
+    def available(self) -> bool:
+        """Available once the thermometer has reported it."""
+        return self._device.alarm_interval is not None

@@ -48,6 +48,25 @@ def test_listeners_are_called_and_removable(device):
     assert calls == [1]
 
 
+def test_status_updates_firmware_and_alarm_interval(device):
+    registry = MagicMock()
+    registry.async_get_device.return_value = MagicMock(id="dev1")
+    with patch.object(mod.dr, "async_get", return_value=registry):
+        device._async_notification(None, bytearray(STATUS_FRAME))
+        device._async_notification(None, bytearray(STATUS_FRAME))
+    assert device.firmware == "0.11" and device.alarm_interval == 5
+    registry.async_update_device.assert_called_once_with("dev1", sw_version="0.11")
+
+
+def test_firmware_without_registered_device_is_still_remembered(device):
+    registry = MagicMock()
+    registry.async_get_device.return_value = None
+    with patch.object(mod.dr, "async_get", return_value=registry):
+        device._async_notification(None, bytearray(STATUS_FRAME))
+    assert device.firmware == "0.11"
+    registry.async_update_device.assert_not_called()
+
+
 async def test_fahrenheit_device_is_switched_to_celsius(device):
     device._client = fake_client()
     device._async_notification(None, bytearray(bytes.fromhex("55aa0008a044000b01c00501dd")))

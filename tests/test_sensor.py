@@ -6,7 +6,14 @@ import asyncio
 from unittest.mock import MagicMock
 
 from custom_components.thermogatz.coordinator import ThermogatzDevice
-from custom_components.thermogatz.sensor import AmbientSensor, BatterySensor, ProbeSensor, async_setup_entry
+from custom_components.thermogatz.sensor import (
+    AlarmIntervalSensor,
+    AmbientSensor,
+    BatterySensor,
+    FirmwareSensor,
+    ProbeSensor,
+    async_setup_entry,
+)
 
 from .conftest import ADDRESS, NO_PROBES_FRAME, PROBE4_FRAME, STATUS_FRAME
 
@@ -48,9 +55,14 @@ def test_battery_sensor_goes_unavailable_with_the_link(hass):
 
 def test_unique_ids_are_stable_and_distinct(hass):
     device = make_device(hass)
-    entities = [ProbeSensor(device, i) for i in range(4)] + [AmbientSensor(device), BatterySensor(device)]
+    entities = [ProbeSensor(device, i) for i in range(4)] + [
+        AmbientSensor(device),
+        BatterySensor(device),
+        FirmwareSensor(device),
+        AlarmIntervalSensor(device),
+    ]
     ids = [e.unique_id for e in entities]
-    assert len(set(ids)) == 6
+    assert len(set(ids)) == 8
     assert ids[0] == f"{ADDRESS}_probe_1" and ids[4] == f"{ADDRESS}_ambient" and ids[5] == f"{ADDRESS}_battery"
 
 
@@ -59,7 +71,7 @@ async def test_setup_creates_all_entities(hass):
     entry.runtime_data = make_device(hass)
     added = []
     await async_setup_entry(hass, entry, lambda entities: added.extend(entities))
-    assert len(added) == 6
+    assert len(added) == 8
 
 
 async def test_entity_follows_device_updates(hass):
@@ -71,3 +83,14 @@ async def test_entity_follows_device_updates(hass):
     device._async_notification(None, bytearray(PROBE4_FRAME))
     sensor.async_write_ha_state.assert_called()
     await asyncio.sleep(0)
+
+
+def test_firmware_and_alarm_interval_survive_a_dropped_link(hass):
+    device = make_device(hass)
+    firmware, interval = FirmwareSensor(device), AlarmIntervalSensor(device)
+    assert not firmware.available and not interval.available
+    device._async_notification(None, bytearray(STATUS_FRAME))
+    assert firmware.native_value == "0.11" and firmware.available
+    assert interval.native_value == 5 and interval.available
+    device._set_disconnected()
+    assert firmware.available and interval.available

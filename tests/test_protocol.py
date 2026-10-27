@@ -37,7 +37,13 @@ def test_build_frame_length_counts_command_and_payload():
 
 
 def test_status_frame():
-    assert FrameParser().feed(STATUS_FRAME) == [Status(battery=68, firmware="0.11", fahrenheit=False)]
+    assert FrameParser().feed(STATUS_FRAME) == [Status(battery=68, firmware="0.11", fahrenheit=False, alarm_interval=5)]
+
+
+def test_short_status_frame_has_no_alarm_interval():
+    body = bytes([0x55, 0xAA, 0x00, 0x05, 0xA0, 0x44, 0x00, 0x0B, 0x00])
+    [status] = FrameParser().feed(body + bytes([xor_checksum(body)]))
+    assert status.alarm_interval is None and status.firmware == "0.11"
 
 
 def test_probe_4_connected():

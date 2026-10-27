@@ -59,6 +59,7 @@ class Status:
     battery: int
     firmware: str
     fahrenheit: bool
+    alarm_interval: int | None = None
 
 
 @dataclass(frozen=True)
@@ -120,6 +121,7 @@ def _decode(cmd: int, payload: bytes) -> Status | Temps | None:
             battery=payload[0],
             firmware=f"{payload[1]}.{payload[2]}",
             fahrenheit=payload[3] != 0,
+            alarm_interval=payload[5] if len(payload) > 5 else None,
         )
     if cmd == CMD_TEMPS and len(payload) >= 12:
         values = [_decode_temp(hi, lo) for hi, lo in zip(payload[0::2], payload[1::2])]

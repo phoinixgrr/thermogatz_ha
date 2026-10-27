@@ -75,6 +75,9 @@ For a device called `AT-02 5F3E` (the last four digits of its address):
 | `sensor.at_02_5f3e_probe_1` ... `probe_4` | °C | unavailable while nothing is plugged into that socket |
 | `sensor.at_02_5f3e_ambient` | °C | the grill (ambient) probe |
 | `sensor.at_02_5f3e_battery` | % | diagnostic |
+| `sensor.at_02_5f3e_firmware` | | firmware version reported by the thermometer, also shown on the device page |
+| `sensor.at_02_5f3e_alarm_interval` | min | how often an alarm repeats, as set on the thermometer |
+| `binary_sensor.at_02_5f3e_connection` | | on while Home Assistant holds the Bluetooth link |
 
 Temperatures are always Celsius. Home Assistant converts them to your unit system. If the thermometer is set to
 Fahrenheit, the integration switches it back to Celsius when it connects.
@@ -115,15 +118,15 @@ Replace the entity ids and `notify.notify` with yours.
 
 ### Thermometer lost
 
-Probes go unavailable when the link drops. An unplugged probe does too, so watch the battery sensor, which is
-only available while connected.
+Probes go unavailable when the link drops, and so does an unplugged probe, so use the connection sensor to tell
+the two apart.
 
 ```yaml
 - alias: BBQ thermometer disconnected
   triggers:
     - trigger: state
-      entity_id: sensor.at_02_5f3e_battery
-      to: unavailable
+      entity_id: binary_sensor.at_02_5f3e_connection
+      to: "off"
       for: "00:03:00"
   actions:
     - action: notify.notify

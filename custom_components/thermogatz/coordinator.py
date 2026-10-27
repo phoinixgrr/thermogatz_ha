@@ -14,9 +14,11 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 
 from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    DOMAIN,
     NOTIFY_UUID,
     PROBE_COUNT,
     STALE_AFTER_SECONDS,
@@ -55,6 +57,7 @@ class ThermogatzDevice:
         self.firmware: str | None = None
         self.probes: list[float | None] = [None] * PROBE_COUNT
         self.ambient: float | None = None
+        self.alarm_interval: int | None = None
         self.connected = False
 
         self._client: BleakClient | None = None
@@ -202,7 +205,8 @@ class ThermogatzDevice:
             self._last_frame = time.monotonic()
             if isinstance(frame, Status):
                 self.battery = frame.battery
-                self.firmware = frame.firmware
+                self.alarm_interval = frame.alarm_interval
+                self._set_firmware(frame.firmware)
                 if frame.fahrenheit and self._client is not None:
                     self.hass.async_create_background_task(
                         self._async_write(set_unit_celsius()),
@@ -213,6 +217,16 @@ class ThermogatzDevice:
                 self.ambient = frame.ambient
                 self._ask_status_if_unknown()
         self._notify_listeners()
+
+    @callback
+    def _set_firmware(self, firmware: str) -> None:
+        """Remember the firmware version and show it on the device page."""
+        if firmware == self.firmware:
+            return
+        self.firmware = firmware
+        registry = dr.async_get(self.hass)
+        if (device := registry.async_get_device(identifiers={(DOMAIN, self.address)})) is not None:
+            registry.async_update_device(device.id, sw_version=firmware)
 
     @callback
     def _ask_status_if_unknown(self) -> None:

@@ -19,7 +19,12 @@
   "entity": {
     "sensor": {
       "probe": { "name": "Probe {number}" },
-      "ambient": { "name": "Ambient" }
+      "ambient": { "name": "Ambient" },
+      "firmware": { "name": "Firmware" },
+      "alarm_interval": { "name": "Alarm interval" }
+    },
+    "binary_sensor": {
+      "connection": { "name": "Connection" }
     }
   }
 }

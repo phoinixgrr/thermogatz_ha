@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import ThermogatzDevice
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type ThermogatzConfigEntry = ConfigEntry[ThermogatzDevice]
 

@@ -71,12 +71,23 @@ The device sends nothing until it is asked: connect, subscribe to `cee2`, write 
 ```
 55 AA 00 08 A0 | 44 00 0B 00 C0 05 01 | DC
                  |  |  |  |  |  |  |
-                 |  |  |  |  |  +--+-- unknown (05 01 on the sample device)
-                 |  |  |  |  +-------- unknown flags (C0)
+                 |  |  |  |  |  |  +-- unknown flag, 01 on the sample device
+                 |  |  |  |  |  +----- alarm repeat interval in minutes (5)
+                 |  |  |  |  +-------- flags, see below (C0)
                  |  |  |  +----------- unit, 00 = Celsius, 01 = Fahrenheit
-                 |  +--+-------------- firmware major.minor = 0.11
+                 |  +--+-------------- firmware major.minor, shown as 0.11
                  +-------------------- battery percent (0x44 = 68)
 ```
+
+The flags byte `C0` is `1100 0000`. The app reads bits 6 to 4 (`100` = 4) as the number of probe sockets, which
+matches the AT-02. Bit 7 and bits 3 to 0 are read by the app but their meaning is not clear.
+
+The alarm interval is the "alarm interval" row of the app's settings screen, which offers 1, 3, 5, 10 and 15
+minutes, and the sample device reports 5. The trailing flag is read as a boolean by the app and its use was not
+traced.
+
+The app's settings screen also has a display interval, backlight and buzzer rows for the AT-02. The code only shows
+them on firmware 5.0 and later, and the sample device reports 0.11, so none of that was seen on the wire.
 
 ### `A1` temperature reply
 
@@ -120,7 +131,7 @@ status reply says the device is in Fahrenheit.
 
 ## What is not known
 
-- The meaning of the last three `A0` bytes and of `A8`.
+- The meaning of the flags byte apart from the probe count, of the trailing `A0` flag, and of `A8`.
 - Whether temperatures are sent in tenths of a degree Fahrenheit when the device is in Fahrenheit. The integration
   avoids the question by switching the device to Celsius.
 - Alarm (`A5`) and target-temperature commands. They are not needed to read temperatures and are not implemented.
